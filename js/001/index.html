@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+  </head>
+  <body>
+    <script id="vs" type="x-shader/x-vertex">
+      uniform float time;
+      uniform float size;
+
+      float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+      }
+
+      void main(){
+        // gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + (size * rand(vec2(sin(time)))), position.y + (size * rand(vec2(cos(time)))), position.z * rand(vec2(sin(time))), 1.0);
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    </script>
+    <script id="fs" type="x-shader/x-fragment">
+      precision mediump float;
+      //uniform float time;
+
+      void main(){
+        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      }
+    </script>
+  
+
+    <div id="container"></div>
+    <script src="./assets/js/libs/three.min.js"></script>
+    <script defer src="./assets/js/app.js"></script>
+  </body>
+</html>
