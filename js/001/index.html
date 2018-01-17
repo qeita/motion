@@ -4,35 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>GLSL Shader</title>
     <link rel="stylesheet" href="./assets/css/style.css">
   </head>
   <body>
-    <script id="vs" type="x-shader/x-vertex">
+    <!-- 平面GLSL -->
+    <script id="vs-plane" type="x-shader/x-vertex">
+      void main(){
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    </script>
+
+    <script id="fs-plane" type="x-shader/x-fragment">
+      precision mediump float;
       uniform float time;
-      uniform float size;
+      uniform vec2 resolution;
 
       float rand(vec2 co){
         return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
       }
 
       void main(){
-        // gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + (size * rand(vec2(sin(time)))), position.y + (size * rand(vec2(cos(time)))), position.z * rand(vec2(sin(time))), 1.0);
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        vec2 p = (gl_FragCoord.xy * 2.0 - resolution)/min(resolution.x, resolution.y);
+        gl_FragColor = vec4(0.3 * sin(time * 0.5) * rand(p), 0.3 * sin(time * 0.5) * rand(p), 0.3 * sin(time * 0.5) * rand(p), 1.0);
       }
     </script>
-    <script id="fs" type="x-shader/x-fragment">
-      precision mediump float;
-      //uniform float time;
+
+    <!-- テキストGLSL -->
+    <script id="vs-text" type="x-shader/x-vertex">
+      uniform float time;
+      uniform float size;
+      varying float vTime;
+
+      float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+      }
+
+      float len(vec2 posiiton){
+        float len = length(position);
+        return 200.0/len;
+      }
 
       void main(){
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        // gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + (size * rand(vec2(sin(time)))), position.y + (size * rand(vec2(cos(time)))), position.z * rand(vec2(sin(time))), 1.0);
+        // gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
+        vTime = time;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + size + rand(vec2(sin(time)) * position.xy) * len(position.xy) * cos(time), position.y + size + rand(vec2(cos(time))) * len(position.xy) * sin(time) , position.z + size + 0.1 * len(position.xy) , 1.0);
+      }
+    </script>
+    <script id="fs-text" type="x-shader/x-fragment">
+      precision mediump float;
+
+      uniform vec2 resolution;
+      varying float vTime;
+
+
+      void main(){
+        // gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        // vec2 p = (gl_FragCoord.xy * 2.0 - resolution)/min(resolution.x, resolution.y);
+        gl_FragColor = vec4(abs(sin(vTime * 0.1)), abs(cos(vTime * 0.1)), abs(sin(vTime * 0.3)), 1.0);
       }
     </script>
   
 
     <div id="container"></div>
+
+    <script src="./assets/js/libs/TweenMax.min.js"></script>
     <script src="./assets/js/libs/three.min.js"></script>
+    <script src="./assets/js/libs/OrbitControls.js"></script>
     <script defer src="./assets/js/app.js"></script>
   </body>
 </html>
