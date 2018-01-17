@@ -3,10 +3,29 @@
 ( () => {
   let controls, camera, scene, renderer, raycaster;
 
-  let plane, text, textFont;
-  // let charArray = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-  let charArray = 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよわをん'.split('');
-  let charIndex = 0;
+  let plane, text;
+
+  /**
+   * 言語データ
+   */
+  let textFont = {
+    ja: null,
+    en: null
+  };
+  let fontSrc = {
+    ja: './assets/fonts/M+1c_heavy_Regular.json',
+    en: './assets/fonts/helvetiker_bold.typeface.json'
+  };
+  let charArray = {
+    ja: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよわをん'.split(''),
+    en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+  };
+  let charIndex = {
+    ja: 0,
+    en: 0
+  };
+
+  let charType = 'ja';
 
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -67,16 +86,15 @@
      * ref: http://mplus-fonts.osdn.jp/index.html
      */
     let loader = new THREE.FontLoader();
-    // loader.load('./assets/fonts/helvetiker_bold.typeface.json', (font) => {
+
+    loader.load('./assets/fonts/helvetiker_bold.typeface.json', (font) => {
+      textFont.en = font;
+    });
+
     loader.load('./assets/fonts/M+1c_heavy_Regular.json', (font) => {
       let xMid, yMid;
 
       let textShape = new THREE.BufferGeometry();
-      // let color = 0xcccccc;
-      // let mat = new THREE.MeshPhongMaterial({
-      //   color: color,
-      //   side: THREE.DoubleSide
-      // });
       let mat = new THREE.ShaderMaterial({
         uniforms: {
           time: {
@@ -96,7 +114,7 @@
         blending: THREE.AdditiveBlending
       });
 
-      let message = charArray[charIndex];
+      let message = charArray[charType][charIndex[charType]];
       let shapes = font.generateShapes(message, 100, 2);
       let geo = new THREE.ShapeGeometry(shapes);
       geo.computeBoundingBox();
@@ -111,7 +129,7 @@
 
       camera.lookAt(text.position);
       scene.add(text);
-      textFont = font;
+      textFont.ja = font;
     });
 
     renderer = new THREE.WebGLRenderer({antialias: true});
@@ -119,12 +137,14 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('container').appendChild(renderer.domElement);
 
-    window.addEventListener('resize', () => {
-      resize();
-    }, false);
+    attachEv();
+  }
 
 
-
+  /**
+   * イベントをアタッチ
+   */
+  function attachEv(){
     /**
      * テキストのイベント判定
      * ref: http://chibinowa.net/note/js/threejs-obj-mouse.html
@@ -138,24 +158,44 @@
       let intersect = raycaster.intersectObject(text);
       if(intersect.length > 0){
         changeChar(true);
-        addForce();
+        // addForce();
       }
     });
 
+    /**
+     * リサイズイベント
+     */
+    window.addEventListener('resize', () => {
+      resize();
+    }, false);    
+
+    /**
+     * キーイベント
+     */    
     window.addEventListener('keydown', (e) => {
       // console.log(e.keyCode);
       switch(e.keyCode){
         case 37:
           changeChar(false);          
           break;
+        case 38:
+          changeCharType('ja');
+          break;
         case 39:
           changeChar(true);
           break;
+        case 40:
+          changeCharType('en');
+          break;
       }
-      addForce();
+      // addForce();
     }, false);
+
   }
 
+  /**
+   * レンダラーリサイズ
+   */
   function resize(){
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -169,22 +209,39 @@
   function changeChar(isIncrement){
     if(isIncrement){
       // 加算
-      if(charIndex >= charArray.length -1){
-        charIndex = 0;
+      if(charIndex[charType] >= charArray[charType].length -1){
+        charIndex[charType] = 0;
       }else{
-        charIndex++;
+        charIndex[charType] += 1;
       }
     }else{
       if(charIndex <= 0){
-        charIndex = charArray.length -1;
+        charIndex[charType] = charArray[charType].length -1;
       }else{
-        charIndex--;
+        charIndex[charType] -= 1;
       }      
     }
+    updateTextGeo();
+  }
+
+  /**
+   * 言語切り替え
+   * @param {string} lang - 選択言語(en/ja) 
+   */
+  function changeCharType(lang){
+    charType = lang;
+    updateTextGeo();
+  }
+
+  /**
+   * 言語・文字種更新したらジオメトリ反映
+   */
+  function updateTextGeo(){
     text.geometry = null;
 
     let textShape = new THREE.BufferGeometry();
-    let geo = new THREE.ShapeGeometry(textFont.generateShapes(charArray[charIndex], 100, 2));
+    let c = charArray[charType][charIndex[charType]];
+    let geo = new THREE.ShapeGeometry(textFont[charType].generateShapes(c, 100, 2));
     geo.computeBoundingBox();
 
     let xMid =  -0.5 * (geo.boundingBox.max.x - geo.boundingBox.min.x);
@@ -195,13 +252,16 @@
   }
 
 
-  function addForce(){
-    text.material.uniforms.size.value += Math.random() * 10.0 - 5.0;
-    setTimeout(function(){
-      text.material.uniforms.size.value = 0.0;
-    }, 1000);    
-  }
+  // function addForce(){
+  //   text.material.uniforms.size.value += Math.random() * 10.0 - 5.0;
+  //   setTimeout(function(){
+  //     text.material.uniforms.size.value = 0.0;
+  //   }, 1000);    
+  // }
 
+  /**
+   * アニメーション + uniform変数の更新
+   */
   function animate(){
     plane.material.uniforms.time.value += 0.1;
     plane.material.uniforms.resolution.value.x = window.innerWidth;
