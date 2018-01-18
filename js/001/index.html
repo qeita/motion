@@ -48,9 +48,17 @@
       void main(){
         // gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + (size * rand(vec2(sin(time)))), position.y + (size * rand(vec2(cos(time)))), position.z * rand(vec2(sin(time))), 1.0);
         // gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        // gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + size + rand(vec2(sin(time)) * position.xy) * len(position.xy) * cos(time), position.y + size + rand(vec2(cos(time))) * len(position.xy) * sin(time) , position.z + size + 0.1 * len(position.xy) , 1.0);
 
         vTime = time;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position.x + size + rand(vec2(sin(time)) * position.xy) * len(position.xy) * cos(time), position.y + size + rand(vec2(cos(time))) * len(position.xy) * sin(time) , position.z + size + 0.1 * len(position.xy) , 1.0);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(
+          position.x + rand(vec2(sin(time)) * position.xy) * len(position.xy) * cos(time) * size,
+          position.y + rand(vec2(cos(time))) * len(position.xy) * sin(time) * size,
+          position.z + 0.1 * len(position.xy) ,
+          1.0
+        );
+
       }
     </script>
     <script id="fs-text" type="x-shader/x-fragment">

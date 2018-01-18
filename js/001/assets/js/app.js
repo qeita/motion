@@ -27,6 +27,8 @@
 
   let charType = 'ja';
 
+  let hasForceAnim = false;
+
 
   window.addEventListener('DOMContentLoaded', () => {
     init();
@@ -103,7 +105,7 @@
           },
           size: {
             type: 'f',
-            value: 0.0
+            value: 1.0
           },
           resolution: {value: new THREE.Vector2()}
         },
@@ -158,7 +160,7 @@
       let intersect = raycaster.intersectObject(text);
       if(intersect.length > 0){
         changeChar(true);
-        // addForce();
+        addForce();
       }
     });
 
@@ -188,7 +190,7 @@
           changeCharType('en');
           break;
       }
-      // addForce();
+      addForce();
     }, false);
 
   }
@@ -215,7 +217,7 @@
         charIndex[charType] += 1;
       }
     }else{
-      if(charIndex <= 0){
+      if(charIndex[charType] <= 0){
         charIndex[charType] = charArray[charType].length -1;
       }else{
         charIndex[charType] -= 1;
@@ -252,12 +254,34 @@
   }
 
 
-  // function addForce(){
-  //   text.material.uniforms.size.value += Math.random() * 10.0 - 5.0;
-  //   setTimeout(function(){
-  //     text.material.uniforms.size.value = 0.0;
-  //   }, 1000);    
-  // }
+  function addForce(){
+    if(hasForceAnim) return;
+    hasForceAnim = true;
+    let _v = Math.random() * 15.0;
+    let _isUp = false;
+
+    let forceAnim = () => {
+      setTimeout( () => {
+        if(_isUp){
+          text.material.uniforms.size.value *= 0.98;
+          if(text.material.uniforms.size.value <= 1.0){
+            text.material.uniforms.size.value = 1.0;
+            hasForceAnim = false;
+            return;
+          }else{
+            forceAnim();
+          }
+        }else{
+          text.material.uniforms.size.value *= 1.2;
+          if(text.material.uniforms.size.value >= _v){
+            _isUp = true;
+          }
+          forceAnim();
+        }
+      }, 1000/60);
+    };
+    forceAnim(); 
+  }
 
   /**
    * アニメーション + uniform変数の更新
