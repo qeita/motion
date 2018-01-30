@@ -8,6 +8,10 @@
   let timer = null;
   let morphType = 0;
 
+  let geo = {};
+  let mat = {};
+  let meshType = 'box';
+
 
   window.addEventListener('DOMContentLoaded', () => {
     init();
@@ -35,9 +39,10 @@
 
 
     /**
-     * 平面メッシュ描画
+     * Box情報
      */
-    let mat = new THREE.ShaderMaterial({
+    geo.box = new THREE.BoxGeometry(100, 100, 100, 50, 50, 50);
+    mat.box = new THREE.ShaderMaterial({
       uniforms: {
         time: {
           type: 'f',
@@ -49,14 +54,40 @@
         },
         resolution: {value: new THREE.Vector2()}
       },
-      vertexShader: document.getElementById('vs-plane').textContent,
-      fragmentShader: document.getElementById('fs-plane').textContent,
+      vertexShader: document.getElementById('vs-box').textContent,
+      fragmentShader: document.getElementById('fs-box').textContent,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
     });
 
-    box = new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100, 50, 50, 50), mat);
+    /**
+     * Sphere情報
+     */
+    geo.sphere = new THREE.SphereGeometry(100, 32, 32);
+    mat.sphere = new THREE.ShaderMaterial({
+      uniforms: {
+        time: {
+          type: 'f',
+          value: 0.0
+        },
+        morphing: {
+          type: 'f',
+          value: 0.0
+        },
+        resolution: {value: new THREE.Vector2()}
+      },
+      vertexShader: document.getElementById('vs-sphere').textContent,
+      fragmentShader: document.getElementById('fs-sphere').textContent,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+
+
+
+    box = new THREE.Mesh(geo.box, mat.box);
     scene.add(box);
 
     camera.lookAt(box);
@@ -90,7 +121,7 @@
         addForce();
 
         wTimer = setTimeout( () => {
-          changeModel();
+          moveVertex();
         }, 4000);
       }
     });
@@ -103,16 +134,41 @@
     }, false);
 
     /**
+     * キーダウンイベント
+     */
+    window.addEventListener('keydown', (e) => {
+      switch(e.keyCode){
+        case 38:
+          changeGeo('box');
+          break;
+        case 40:
+          changeGeo('sphere');
+          break;
+      }
+    }, false);
+
+    /**
+     * ボタンクリックイベント
+     */    
+    document.querySelector('.btn').addEventListener('click', (e) => {
+      if(meshType === 'box'){
+        changeGeo('sphere');
+      }else{
+        changeGeo('box');
+      }
+    }, false);
+
+    /**
      * 自動で頂点切り替え
      */
-    let changeModel = () => {
+    let moveVertex = () => {
       wTimer = setTimeout( () => {
         addForce();
-        changeModel();
+        moveVertex();
       }, 3000);  
     };
 
-    changeModel();
+    moveVertex();
   }
 
   /**
@@ -124,6 +180,24 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  /**
+   * メッシュ切替
+   * @param {string} type - メッシュタイプ(box or sphere) 
+   */
+  function changeGeo(type){
+    if(type === meshType) return;
+    meshType = type;
+    switch(type){
+      case 'box':
+        box.geometry = geo.box;
+        box.material = mat.box;
+        break;
+      case 'sphere':
+        box.geometry = geo.sphere;
+        box.material = mat.sphere;
+        break;
+    }
+  }
 
   function addForce(){
     clearTimeout(timer);

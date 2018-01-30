@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="./assets/css/style.css">
   </head>
   <body>
-    <!-- 平面GLSL -->
-    <script id="vs-plane" type="x-shader/x-vertex">
+    <!-- Box GLSL -->
+    <script id="vs-box" type="x-shader/x-vertex">
       uniform float time;
       uniform float morphing;
 
@@ -44,7 +44,7 @@
       }
     </script>
 
-    <script id="fs-plane" type="x-shader/x-fragment">
+    <script id="fs-box" type="x-shader/x-fragment">
       precision mediump float;
       uniform vec2 resolution;
       varying float vTime;
@@ -57,7 +57,57 @@
     </script>
   
 
+    <!-- Sphere GLSL -->
+    <script id="vs-sphere" type="x-shader/x-vertex">
+      uniform float time;
+      uniform float morphing;
+
+      varying float vTime;
+
+      float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+      }
+
+      float len(vec2 p){
+        return length(p);
+      }
+
+      void main(){
+        vTime = time;
+
+        float a = atan(position.y, position.x);
+        float b = atan(position.z, position.x);
+        float r = 100.0;
+        float shakeVal = 20.0;
+
+        float m1 = max(0.0, 1.0 - morphing);
+        float m2 = min(morphing, 1.0);
+        float m3 = max(0.0, morphing - 1.0);
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(
+          position.x * m1 + (normalize(position.x) * 100. + rand(position.xy * sin(time)) * shakeVal * m3) * m2,
+          position.y * m1 + (normalize(position.y) * 100. + rand(position.xy * cos(time)) * shakeVal * m3) * m2,
+          position.z * max(0.0, 1.0 - morphing) + (r * sin(b) + rand(position.xy * cos(time)) * shakeVal) * m3,
+          1.0
+        );
+      }
+    </script>
+
+    <script id="fs-sphere" type="x-shader/x-fragment">
+      precision mediump float;
+      uniform vec2 resolution;
+      varying float vTime;
+
+      void main(){
+        vec2 p = (gl_FragCoord.xy * 2.0 - resolution)/min(resolution.x, resolution.y);
+
+        gl_FragColor = vec4(sin(vTime * 0.2) * 0.8, cos(vTime * 0.2) * 0.8, 1.0, 0.7);
+      }
+    </script>
+
     <div id="container"></div>
+
+    <button class="btn">SWITCH</button>
 
     <script src="./assets/js/libs/TweenMax.min.js"></script>
     <script src="./assets/js/libs/three.min.js"></script>
