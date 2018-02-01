@@ -27,7 +27,7 @@
 
   let charType = 'ja';
 
-  let hasForceAnim = false;
+  let forceTimer = null;
 
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -255,18 +255,18 @@
 
 
   function addForce(){
-    if(hasForceAnim) return;
-    hasForceAnim = true;
+    clearTimeout(forceTimer);
+    text.material.uniforms.size.value = 1.0;
     let _v = Math.random() * 15.0;
     let _isUp = false;
 
     let forceAnim = () => {
-      setTimeout( () => {
+      forceTimer = setTimeout( () => {
         if(_isUp){
           text.material.uniforms.size.value *= 0.98;
           if(text.material.uniforms.size.value <= 1.0){
             text.material.uniforms.size.value = 1.0;
-            hasForceAnim = false;
+            clearTimeout(forceTimer);
             return;
           }else{
             forceAnim();
