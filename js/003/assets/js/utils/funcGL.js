@@ -68,6 +68,19 @@ function createVbo(data){
   return vbo;
 }
 
+/**
+ * IBO を生成
+ * @param {Array} data - インデックスデータを格納した配列
+ * @return {WebGLBuffer} IBO 
+ */
+function createIbo(data){
+  let ibo = gl.createBuffer();
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
+  gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Int16Array(data), gl.STATIC_DRAW);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+  return ibo;
+}
+
 
 /**
  * VBO を IBO をバインドし有効化
