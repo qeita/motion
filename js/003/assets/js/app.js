@@ -1,7 +1,9 @@
 'use strict';
 
+let gl;
+
 ( () => {
-  let canvas, gl, ext;
+  let canvas, ext;
 
   let run, startTime, nowTime;
 

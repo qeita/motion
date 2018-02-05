@@ -1,7 +1,5 @@
 'use strict';
 
-let gl;
-
 /**
  * @class
  */
