@@ -99,3 +99,26 @@ function setAttribute(vbo, attL, attS, ibo){
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo);
   }
 }
+
+
+/**
+ * 画像ファイル読み込み、テクスチャ生成してコールバック返却
+ * @param {*} source - ソースとなる画像パス
+ * @param {*} callback - コールバック関数(第一引数にテクスチャオブジェクトが入った状態で呼ばれる)
+ */
+function createTexture(source, callback){
+  let img = new Image();
+  img.onload = () => {
+    let tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+    callback(tex);
+  };
+  img.src = source;
+}

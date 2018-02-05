@@ -23,26 +23,58 @@ class CoreGL{
 
     // 拡張機能を有効化
     let ext = getWebGLExtensions();
+    let mat = new matIV();
+    let qtn = new qtnIV();
+    let camera = new InteractionCamera(qtn);
+    camera.update();
+
     let callback = params.callback;
 
-    loadShaderSource(
-      params.vs,
-      params.fs,
-      (shader) => {
-        let vs = createShader(shader.vs, gl.VERTEX_SHADER);
-        let fs = createShader(shader.fs, gl.FRAGMENT_SHADER);
-        let prg = createProgram(vs, fs);
-        if(prg === null){ return; }
-        scenePrg = new ProgramParameter(prg);
-        if(callback){
-          callback({
-            canvas: canvas,
-            gl: gl,
-            ext: ext,
-            prg: scenePrg
-          });
+    // シェーダファイル読み込み
+    let loadShader = () => {
+      loadShaderSource(
+        params.vs,
+        params.fs,
+        (shader) => {
+          let vs = createShader(shader.vs, gl.VERTEX_SHADER);
+          let fs = createShader(shader.fs, gl.FRAGMENT_SHADER);
+          let prg = createProgram(vs, fs);
+          if(prg === null){ return; }
+          scenePrg = new ProgramParameter(prg);
+          if(callback){
+            callback({
+              canvas: canvas,
+              gl: gl,
+              ext: ext,
+              mat: mat,
+              qtn: qtn,
+              camera: camera,
+              prg: scenePrg
+            });
+          }
         }
-      }
-    )
+      );      
+    };
+
+    if(params.tex.length > 0){
+      // 読み込むテクスチャの数に応じて変更
+      createTexture(params.tex[0], (texture0) => {
+        createTexture(params.tex[1], (texture1) => {
+          gl.activeTexture(gl.TEXTURE0);
+          gl.bindTexture(gl.TEXTURE_2D, texture0);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  
+          gl.activeTexture(gl.TEXTURE1);
+          gl.bindTexture(gl.TEXTURE_2D, texture1);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+          gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+          loadShader();
+        });
+      });
+    }else{
+      loadShader();
+    }
   }
 }
