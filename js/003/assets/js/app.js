@@ -200,10 +200,17 @@ let gl;
     /**
      * カメラ関連イベント
      */
-    canvas.addEventListener('mousedown', camera.startEvent, false);
-    canvas.addEventListener('mousemove', camera.moveEvent, false);
-    canvas.addEventListener('mouseup', camera.endEvent, false);
-    canvas.addEventListener('wheel', camera.wheelEvent, false);
+    let ua = window.navigator.userAgent.toLowerCase();
+    if(ua.indexOf('iphone') > 0 || ua.indexOf('ipad') > 0 || ua.indexOf('android') > 0){
+      canvas.addEventListener('touchstart', camera.startEvent, false);
+      canvas.addEventListener('touchmove', camera.moveEvent, false);
+      canvas.addEventListener('touchend', camera.endEvent, false);
+    }else{
+      canvas.addEventListener('mousedown', camera.startEvent, false);
+      canvas.addEventListener('mousemove', camera.moveEvent, false);
+      canvas.addEventListener('mouseup', camera.endEvent, false);
+      canvas.addEventListener('wheel', camera.wheelEvent, false);
+    }
   }
 
   /**
