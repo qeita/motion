@@ -5,13 +5,15 @@ let gl;
 
 ( () => {
   let canvas, ext;
-  let mat, qtn, camera, scenePrg, postPrg;
+  let mat, qtn, camera, scenePrg, postPrg, fBuffer;
 
   let run, startTime, nowTime;
 
   let resolution = [];
   let mouse = [0.0, 0.0];
   let usePostProcess = true; // ポストプロセスを使用
+
+  let stats, gui;
 
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -91,10 +93,13 @@ let gl;
       postPrg.attLocation[0] = gl.getAttribLocation(postPrg.program, 'position');
       postPrg.attStride[0] = 3;
   
-      postPrg.uniLocation[0] = gl.getUniformLocation(postPrg.program, 'texture');
-      postPrg.uniType[0] = 'uniform1i';
-      postPrg.uniLocation[1] = gl.getUniformLocation(postPrg.program, 'time');
-      postPrg.uniType[1] = 'uniform1f';  
+
+      postPrg.uniLocation[0] = gl.getUniformLocation(postPrg.program, 'resolution');
+      postPrg.uniType[0] = 'uniform2fv';
+      postPrg.uniLocation[1] = gl.getUniformLocation(postPrg.program, 'texture');
+      postPrg.uniType[1] = 'uniform1i';
+      postPrg.uniLocation[2] = gl.getUniformLocation(postPrg.program, 'time');
+      postPrg.uniType[2] = 'uniform1f';  
     }
 
 
@@ -135,8 +140,10 @@ let gl;
 
     let IBO = createIbo(index);
 
-    let fBuffer = createFramebuffer(window.innerWidth, window.innerHeight);
-    gl.bindTexture(gl.TEXTURE_2D, fBuffer.texture);
+    if(usePostProcess && postPrg){
+      fBuffer = createFramebuffer(window.innerWidth, window.innerHeight);
+      gl.bindTexture(gl.TEXTURE_2D, fBuffer.texture);
+    }
 
     // 行列関連変数の宣言・初期化
     let mMatrix = mat.identity(mat.create());
@@ -149,12 +156,22 @@ let gl;
     gl.clearColor(0.0, 0.0, 0.0, 1.0);
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST);
-    // gl.enable(gl.BLEND);
-    // gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE);
 
     startTime = Date.now();
     nowTime = 0;
     run = true;
+
+    /**
+     * Stats.js 初期設定
+     */
+    stats = new Stats();
+    stats.showPanel(0);
+    document.body.appendChild(stats.dom);
+
+    /**
+     * datGUI 初期設定
+     */
+    gui = new dat.GUI();
 
     render();
 
@@ -217,10 +234,13 @@ let gl;
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
         setAttribute(postVBO, postPrg.attLocation, postPrg.attStride, IBO);
 
-        gl[postPrg.uniType[0]](postPrg.uniLocation[0], 0);
-        gl[postPrg.uniType[1]](postPrg.uniLocation[1], nowTime);
+        gl[postPrg.uniType[0]](postPrg.uniLocation[0], resolution);
+        gl[postPrg.uniType[1]](postPrg.uniLocation[1], 0);
+        gl[postPrg.uniType[2]](postPrg.uniLocation[2], nowTime);
         gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
       }
+
+      stats.update();
 
       gl.flush();
       if(run){requestAnimationFrame(render);}
@@ -280,8 +300,12 @@ let gl;
     canvas.height = window.innerHeight;
     resolution = [canvas.width, canvas.height];
 
+    if(usePostProcess && postPrg){
+      fBuffer = createFramebuffer(canvas.width, canvas.height);
+      gl.bindTexture(gl.TEXTURE_2D, fBuffer.texture);
+    }
+
     gl.viewport(0, 0, canvas.width, canvas.height);
-    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
   }
 
 })();
