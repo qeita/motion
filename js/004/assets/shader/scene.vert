@@ -1,9 +1,10 @@
 attribute vec3 position;
 attribute vec4 color;
+attribute vec2 texCoord;
 
-uniform float time;
 uniform mat4 mvpMatrix;
 varying vec4 vColor;
+varying vec2 vTex;
 
 
 float rand(vec2 co){
@@ -13,5 +14,6 @@ float rand(vec2 co){
 
 void main(){
   vColor = color;
+  vTex = texCoord;
   gl_Position = mvpMatrix * vec4(position, 1.0);
 }

@@ -26,8 +26,14 @@ let gl;
         './assets/img/lenna.jpg',
         './assets/img/sample.jpg'
       ],
-      vs: './assets/shader/vs.vert',
-      fs: './assets/shader/fs.frag',
+      shader: {
+        scene: {
+          vs: './assets/shader/vs.vert',
+          fs: './assets/shader/fs.frag'  
+        },
+        post: {
+        }
+      },
       callback: (res) => {
         canvas = res.canvas;
         gl = res.gl;
@@ -35,7 +41,7 @@ let gl;
         mat = res.mat;
         qtn = res.qtn;
         camera = res.camera;
-        scenePrg = res.prg;
+        scenePrg = res.scenePrg;
         setup();
         attachEv();
       }

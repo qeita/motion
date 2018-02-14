@@ -11,9 +11,18 @@ let gl;
 
   let resolution = [];
   let mouse = [0.0, 0.0];
-  let usePostProcess = true; // ポストプロセスを使用
+  let usePostProcess = false; // ポストプロセスを使用
 
   let stats, gui;
+
+  let fadeImage = function(){
+    this.fadeValue = 0.0;
+    this.slideValue = 0;0;
+    this.animMount = 0.1;
+    this.isAnim = false;
+  };
+
+  let config = new fadeImage();
 
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -27,9 +36,9 @@ let gl;
   function init(){
     new CoreGL({
       tex: [
-        // './assets/img/lenna.jpg',
-        // './assets/img/sample.jpg',
-        // './assets/img/effect.png',
+        './assets/img/lenna.jpg',
+        './assets/img/sample.jpg',
+        './assets/img/effect.png',
       ],
       shader: {
         scene: {
@@ -64,36 +73,34 @@ let gl;
 
     scenePrg.attLocation[0] = gl.getAttribLocation(scenePrg.program, 'position');
     scenePrg.attStride[0] = 3;
-    // scenePrg.attLocation[1] = gl.getAttribLocation(scenePrg.program, 'texCoord');
-    // scenePrg.attStride[1] = 2;
     scenePrg.attLocation[1] = gl.getAttribLocation(scenePrg.program, 'color');
     scenePrg.attStride[1] = 4;
+    scenePrg.attLocation[2] = gl.getAttribLocation(scenePrg.program, 'texCoord');
+    scenePrg.attStride[2] = 2;
 
 
     scenePrg.uniLocation[0] = gl.getUniformLocation(scenePrg.program, 'mvpMatrix');
     scenePrg.uniType[0] = 'uniformMatrix4fv';
-    // scenePrg.uniLocation[1] = gl.getUniformLocation(scenePrg.program, 'resolution');
-    // scenePrg.uniType[1] = 'uniform2fv';
+    scenePrg.uniLocation[1] = gl.getUniformLocation(scenePrg.program, 'resolution');
+    scenePrg.uniType[1] = 'uniform2fv';
     // scenePrg.uniLocation[2] = gl.getUniformLocation(scenePrg.program, 'time');
     // scenePrg.uniType[2] = 'uniform1f';
 
-    // scenePrg.uniLocation[3] = gl.getUniformLocation(scenePrg.program, 'texture');
-    // scenePrg.uniType[3] = 'uniform1i';
-    // scenePrg.uniLocation[3] = gl.getUniformLocation(scenePrg.program, 'textureUnit0');
-    // scenePrg.uniType[3] = 'uniform1i';
-    // scenePrg.uniLocation[4] = gl.getUniformLocation(scenePrg.program, 'textureUnit1');
-    // scenePrg.uniType[4] = 'uniform1i';
-    // scenePrg.uniLocation[5] = gl.getUniformLocation(scenePrg.program, 'textureUnit2');
-    // scenePrg.uniType[5] = 'uniform1i';
-
-    // scenePrg.uniLocation[3] = gl.getUniformLocation(scenePrg.program, 'mouse');
-    // scenePrg.uniType[3] = 'uniform2fv';
+    scenePrg.uniLocation[2] = gl.getUniformLocation(scenePrg.program, 'textureUnit0');
+    scenePrg.uniType[2] = 'uniform1i';
+    scenePrg.uniLocation[3] = gl.getUniformLocation(scenePrg.program, 'textureUnit1');
+    scenePrg.uniType[3] = 'uniform1i';
+    scenePrg.uniLocation[4] = gl.getUniformLocation(scenePrg.program, 'textureUnit2');
+    scenePrg.uniType[4] = 'uniform1i';
+    scenePrg.uniLocation[5] = gl.getUniformLocation(scenePrg.program, 'fadeValue');
+    scenePrg.uniType[5] = 'uniform1f';
+    scenePrg.uniLocation[6] = gl.getUniformLocation(scenePrg.program, 'slideValue');
+    scenePrg.uniType[6] = 'uniform1f';
 
     if(postPrg){
       postPrg.attLocation[0] = gl.getAttribLocation(postPrg.program, 'position');
       postPrg.attStride[0] = 3;
   
-
       postPrg.uniLocation[0] = gl.getUniformLocation(postPrg.program, 'resolution');
       postPrg.uniType[0] = 'uniform2fv';
       postPrg.uniLocation[1] = gl.getUniformLocation(postPrg.program, 'texture');
@@ -111,10 +118,10 @@ let gl;
     ];
 
     let color = [
-      1.0, 0.0, 0.0, 1.0,
-      0.0, 1.0, 0.0, 1.0,
-      0.0, 0.0, 1.0, 1.0,
-      1.0, 1.0, 1.0, 1.0,
+      1.0, 0.0, 0.0, 0.0,
+      0.0, 1.0, 0.0, 0.0,
+      0.0, 0.0, 1.0, 0.0,
+      1.0, 1.0, 1.0, 0.0,
     ];
 
     let texCoord = [
@@ -126,8 +133,8 @@ let gl;
 
     let VBO = [
       createVbo(position),
-      createVbo(color)
-      // createVbo(texCoord)
+      createVbo(color),
+      createVbo(texCoord)
     ];
 
     let postVBO = [
@@ -172,6 +179,9 @@ let gl;
      * datGUI 初期設定
      */
     gui = new dat.GUI();
+    gui.add(config, 'fadeValue', 0, 120);
+    gui.add(config, 'slideValue', 0, 1);
+    gui.add(config, 'animMount', 0, 1);
 
     render();
 
@@ -191,7 +201,7 @@ let gl;
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       // カメラ関連パラメータ
-      let cameraPosition = [0.0, 0.0, 1.0];
+      let cameraPosition = [0.0, 0.0, 2.0];
       let centerPoint = [0.0, 0.0, 0.0];
       let cameraUpDirection = [0.0, 1.0, 0.0];
       let fovy = 60 * camera.scale;
@@ -217,12 +227,13 @@ let gl;
       mat.multiply(vpMatrix, mMatrix, mvpMatrix);
 
       gl[scenePrg.uniType[0]](scenePrg.uniLocation[0], false, mvpMatrix);
-      // gl[scenePrg.uniType[1]](scenePrg.uniLocation[1], resolution);
+      gl[scenePrg.uniType[1]](scenePrg.uniLocation[1], resolution);
       // gl[scenePrg.uniType[2]](scenePrg.uniLocation[2], nowTime);
-      // gl[scenePrg.uniType[3]](scenePrg.uniLocation[3], 0);
-      // gl[scenePrg.uniType[4]](scenePrg.uniLocation[4], 1);
-      // gl[scenePrg.uniType[4]](scenePrg.uniLocation[5], 2);
-      // gl[scenePrg.uniType[3]](scenePrg.uniLocation[3], mouse);
+      gl[scenePrg.uniType[2]](scenePrg.uniLocation[2], 0);
+      gl[scenePrg.uniType[3]](scenePrg.uniLocation[3], 1);
+      gl[scenePrg.uniType[4]](scenePrg.uniLocation[4], 2);
+      gl[scenePrg.uniType[5]](scenePrg.uniLocation[5], config.fadeValue);
+      gl[scenePrg.uniType[6]](scenePrg.uniLocation[6], config.slideValue);
 
       gl.drawElements(gl.TRIANGLES, index.length, gl.UNSIGNED_SHORT, 0);
       // フレームバッファに対する描画ここまで
@@ -276,20 +287,72 @@ let gl;
     //   mouse = [x, -y];
     // }, false);
 
+    function setAnim(){
+      if(config.isAnim) return;
+      config.isAnim = true;
+
+      let isUp = true;
+      let slideType = 1;
+
+      if(config.slideValue >= 1.0){
+        slideType = 0;
+      }
+      
+      let fadeAnim = () => {
+        if(slideType === 1){
+          config.slideValue += config.animMount * 0.1;
+          if(config.slideValue >= 1.0){
+            config.slideValue = 1.0;
+          }
+        }else{
+          config.slideValue -= config.animMount * 0.1;
+          if(config.slideValue <= 0.0){
+            config.slideValue = 0.0;
+          }
+        }
+
+        if(isUp){
+          setTimeout( () => {
+            config.fadeValue += config.animMount;
+            if(config.fadeValue > 20.0){
+              isUp = false;
+            }
+            fadeAnim();
+          }, 1000 / 60);  
+        }else{
+          setTimeout( () => {
+            config.fadeValue -= config.animMount;
+            if(config.fadeValue <= 0.0){
+              config.isAnim = false;
+              config.fadeValue = 0.0;
+            }else{
+              fadeAnim();
+            }
+          }, 1000 / 60);  
+        }
+      };
+
+      fadeAnim();
+    }
+
+    canvas.addEventListener('click', () => {
+      setAnim();
+    }, false);
+
     /**
      * カメラ関連イベント
      */
-    let ua = window.navigator.userAgent.toLowerCase();
-    if(ua.indexOf('iphone') > 0 || ua.indexOf('ipad') > 0 || ua.indexOf('android') > 0){
-      canvas.addEventListener('touchstart', camera.startEvent, false);
-      canvas.addEventListener('touchmove', camera.moveEvent, false);
-      canvas.addEventListener('touchend', camera.endEvent, false);
-    }else{
-      canvas.addEventListener('mousedown', camera.startEvent, false);
-      canvas.addEventListener('mousemove', camera.moveEvent, false);
-      canvas.addEventListener('mouseup', camera.endEvent, false);
-      canvas.addEventListener('wheel', camera.wheelEvent, false);
-    }
+    // let ua = window.navigator.userAgent.toLowerCase();
+    // if(ua.indexOf('iphone') > 0 || ua.indexOf('ipad') > 0 || ua.indexOf('android') > 0){
+    //   canvas.addEventListener('touchstart', camera.startEvent, false);
+    //   canvas.addEventListener('touchmove', camera.moveEvent, false);
+    //   canvas.addEventListener('touchend', camera.endEvent, false);
+    // }else{
+    //   canvas.addEventListener('mousedown', camera.startEvent, false);
+    //   canvas.addEventListener('mousemove', camera.moveEvent, false);
+    //   canvas.addEventListener('mouseup', camera.endEvent, false);
+    //   canvas.addEventListener('wheel', camera.wheelEvent, false);
+    // }
   }
 
   /**

@@ -12,5 +12,6 @@ void main(){
 
   vec4 samplerColor = texture2D(texture, vTexCoord);
 
-  gl_FragColor = samplerColor * vec4(vec3(n), 1.0);
+  // gl_FragColor = samplerColor * vec4(vec3(n), 1.0);
+  gl_FragColor = samplerColor;
 }
