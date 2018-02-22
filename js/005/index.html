@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>GLSL Shader</title>
+    <link rel="stylesheet" href="./assets/css/style.css">
+  </head>
+  <body>
+    <!-- Box GLSL -->
+    <script id="vs-plane" type="x-shader/x-vertex">
+      uniform float time;
+      uniform float volumeX;
+      uniform float volumeY;
+      uniform float volumeZ;
+      uniform float timeX;
+      uniform float timeY;
+      uniform float timeZ;
+
+      varying float vTime;
+
+      float rand(vec2 co){
+        return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
+      }
+
+      float len(vec2 p){
+        return length(p);
+      }
+
+      void main(){
+        vTime = time;
+
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(
+          position.x + rand(position.xy) * volumeX * sin(time * timeX),
+          position.y + rand(position.xy) * volumeY * cos(time * timeY),
+          position.z + rand(position.xy) * volumeZ * sin(time * timeZ),
+          1.0
+        );
+
+        gl_PointSize = 4.0;
+      }
+    </script>
+
+    <script id="fs-plane" type="x-shader/x-fragment">
+      precision mediump float;
+      uniform vec2 resolution;
+      uniform float split;
+      varying float vTime;
+
+
+      float orb(vec2 p){
+        float l = length(p);
+        return 0.01/l;
+      }
+
+      void main(){
+        vec2 p = (gl_FragCoord.xy * 2.0 - resolution)/resolution/split;
+
+        gl_FragColor = vec4(p.x + sin(vTime * 0.3) *0.5, p.y + cos(vTime * 0.3) * 0.5, 1.0, 0.7);
+      }
+    </script>
+
+
+    <div id="container"></div>
+
+    <script src="../assets/js/libs/stats.min.js"></script>
+    <script src="../assets/js/libs/dat.gui.min.js"></script>
+    <script src="../assets/js/libs/TweenMax.min.js"></script>
+    <script src="../assets/js/libs/three.min.js"></script>
+    <script src="../assets/js/libs/OrbitControls.js"></script>
+    <script defer src="./assets/js/app.js"></script>
+  </body>
+</html>
